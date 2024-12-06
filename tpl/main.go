@@ -13,6 +13,8 @@ const (
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+
 	file, err := os.Open(puzzleInput)
 	if err != nil {
 		log.Fatalln(err)
