@@ -29,7 +29,7 @@ func main() {
 
 	count1 := 0
 	count2 := 0
-	orders := map[int][]int{}
+	orders := make([][]int, 100)
 
 	firstHalf := true
 	scanner := bufio.NewScanner(file)
@@ -63,16 +63,16 @@ func main() {
 		}
 
 		inOrder := true
-		seen := map[int]struct{}{}
+		seen := make([]bool, 100)
 	outer:
 		for _, i := range nums {
 			for _, o := range orders[i] {
-				if _, ok := seen[o]; ok {
+				if seen[o] {
 					inOrder = false
 					break outer
 				}
 			}
-			seen[i] = struct{}{}
+			seen[i] = true
 		}
 		if inOrder {
 			count1 += nums[len(nums)/2]
