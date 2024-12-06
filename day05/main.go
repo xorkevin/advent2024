@@ -101,5 +101,6 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	fmt.Println(count1, count2)
+	fmt.Println("Part 1:", count1)
+	fmt.Println("Part 2:", count2)
 }
