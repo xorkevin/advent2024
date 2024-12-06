@@ -44,7 +44,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	count1 := sim(grid, start)
+	count1, visited := sim(grid, start)
 	fmt.Println("Part 1:", count1)
 
 	count2 := 0
@@ -55,7 +55,11 @@ func main() {
 			if grid[i][j] != '.' {
 				continue
 			}
-			if simLoop(grid, start, Pos{x: j, y: i}) {
+			pos := Pos{x: j, y: i}
+			if !visited[getPosID(pos, w)] {
+				continue
+			}
+			if simLoop(grid, start, pos) {
 				count2++
 			}
 		}
@@ -68,8 +72,8 @@ func simLoop(grid [][]byte, pos Pos, obstruct Pos) bool {
 	w := len(grid[0])
 
 	delta := Pos{x: 0, y: -1}
-	seen := map[State]struct{}{}
-	seen[State{pos: pos, delta: delta}] = struct{}{}
+	seen := make([]byte, w*h)
+	seen[getPosID(pos, w)] |= getDeltaID(delta)
 	for {
 		next := addPos(pos, delta)
 		if outBounds(next, w, h) {
@@ -77,36 +81,33 @@ func simLoop(grid [][]byte, pos Pos, obstruct Pos) bool {
 		}
 		if next == obstruct || grid[next.y][next.x] == '#' {
 			delta = turn(delta)
-			s := State{pos: pos, delta: delta}
-			if _, ok := seen[s]; ok {
+			id := getPosID(pos, w)
+			deltaID := getDeltaID(delta)
+			if seen[id]&deltaID != 0 {
 				return true
 			}
-			seen[s] = struct{}{}
+			seen[id] |= deltaID
 			continue
 		}
 		pos = next
-		s := State{pos: pos, delta: delta}
-		if _, ok := seen[s]; ok {
+		id := getPosID(pos, w)
+		deltaID := getDeltaID(delta)
+		if seen[id]&deltaID != 0 {
 			return true
 		}
-		seen[s] = struct{}{}
+		seen[id] |= deltaID
 	}
 	return false
 }
 
-type (
-	State struct {
-		pos, delta Pos
-	}
-)
-
-func sim(grid [][]byte, pos Pos) int {
+func sim(grid [][]byte, pos Pos) (int, []bool) {
 	h := len(grid)
 	w := len(grid[0])
 
 	delta := Pos{x: 0, y: -1}
-	seen := map[Pos]struct{}{}
-	seen[pos] = struct{}{}
+	seen := make([]bool, w*h)
+	seen[getPosID(pos, w)] = true
+	count := 1
 	for {
 		next := addPos(pos, delta)
 		if outBounds(next, w, h) {
@@ -117,9 +118,13 @@ func sim(grid [][]byte, pos Pos) int {
 			continue
 		}
 		pos = next
-		seen[pos] = struct{}{}
+		id := getPosID(pos, w)
+		if !seen[id] {
+			count++
+		}
+		seen[id] = true
 	}
-	return len(seen)
+	return count, seen
 }
 
 type (
@@ -127,6 +132,23 @@ type (
 		x, y int
 	}
 )
+
+func getPosID(pos Pos, w int) int {
+	return pos.y*w + pos.x
+}
+
+func getDeltaID(delta Pos) byte {
+	if delta.y < 0 {
+		return 1
+	}
+	if delta.x > 0 {
+		return 1 << 1
+	}
+	if delta.y > 0 {
+		return 1 << 2
+	}
+	return 1 << 3
+}
 
 func addPos(a, b Pos) Pos {
 	return Pos{x: a.x + b.x, y: a.y + b.y}
