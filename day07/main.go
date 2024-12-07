@@ -50,8 +50,8 @@ func main() {
 		}
 		if search(target, nums[0], nums[1:], false) {
 			count1 += target
-		}
-		if search(target, nums[0], nums[1:], true) {
+			count2 += target
+		} else if search(target, nums[0], nums[1:], true) {
 			count2 += target
 		}
 	}
