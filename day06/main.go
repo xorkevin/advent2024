@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/xorkevin/advent2024/bitset"
 )
 
 const (
@@ -50,30 +52,21 @@ func main() {
 	count2 := 0
 	h := len(grid)
 	w := len(grid[0])
-	for i := 0; i < h; i++ {
-		for j := 0; j < w; j++ {
-			if grid[i][j] != '.' {
-				continue
-			}
-			pos := Pos{x: j, y: i}
-			if !visited[getPosID(pos, w)] {
-				continue
-			}
-			if simLoop(grid, start, pos) {
-				count2++
-			}
+	seen := bitset.New(w * h * 4)
+	for _, i := range visited {
+		if simLoop(grid, start, i, seen) {
+			count2++
 		}
 	}
 	fmt.Println("Part 2:", count2)
 }
 
-func simLoop(grid [][]byte, pos Pos, obstruct Pos) bool {
+func simLoop(grid [][]byte, pos Pos, obstruct Pos, seen *bitset.BitSet) bool {
 	h := len(grid)
 	w := len(grid[0])
 
 	delta := Pos{x: 0, y: -1}
-	seen := make([]byte, w*h)
-	seen[getPosID(pos, w)] |= getDeltaID(delta)
+	seen.Reset()
 	for {
 		next := addPos(pos, delta)
 		if outBounds(next, w, h) {
@@ -81,32 +74,25 @@ func simLoop(grid [][]byte, pos Pos, obstruct Pos) bool {
 		}
 		if next == obstruct || grid[next.y][next.x] == '#' {
 			delta = turn(delta)
-			id := getPosID(pos, w)
-			deltaID := getDeltaID(delta)
-			if seen[id]&deltaID != 0 {
+			id := getStateID(pos, w, delta)
+			if !seen.Insert(id) {
 				return true
 			}
-			seen[id] |= deltaID
 			continue
 		}
 		pos = next
-		id := getPosID(pos, w)
-		deltaID := getDeltaID(delta)
-		if seen[id]&deltaID != 0 {
-			return true
-		}
-		seen[id] |= deltaID
 	}
 	return false
 }
 
-func sim(grid [][]byte, pos Pos) (int, []bool) {
+func sim(grid [][]byte, pos Pos) (int, []Pos) {
 	h := len(grid)
 	w := len(grid[0])
 
+	var p []Pos
 	delta := Pos{x: 0, y: -1}
-	seen := make([]bool, w*h)
-	seen[getPosID(pos, w)] = true
+	seen := bitset.New(w * h)
+	seen.Insert(getPosID(pos, w))
 	count := 1
 	for {
 		next := addPos(pos, delta)
@@ -119,12 +105,14 @@ func sim(grid [][]byte, pos Pos) (int, []bool) {
 		}
 		pos = next
 		id := getPosID(pos, w)
-		if !seen[id] {
+		if !seen.Contains(id) {
 			count++
 		}
-		seen[id] = true
+		if seen.Insert(id) {
+			p = append(p, pos)
+		}
 	}
-	return count, seen
+	return count, p
 }
 
 type (
@@ -137,17 +125,21 @@ func getPosID(pos Pos, w int) int {
 	return pos.y*w + pos.x
 }
 
-func getDeltaID(delta Pos) byte {
+func getDeltaID(delta Pos) int {
 	if delta.y < 0 {
-		return 1
+		return 0
 	}
 	if delta.x > 0 {
-		return 1 << 1
+		return 1
 	}
 	if delta.y > 0 {
-		return 1 << 2
+		return 2
 	}
-	return 1 << 3
+	return 3
+}
+
+func getStateID(pos Pos, w int, delta Pos) int {
+	return getPosID(pos, w)*4 + getDeltaID(delta)
 }
 
 func addPos(a, b Pos) Pos {
