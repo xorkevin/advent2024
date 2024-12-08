@@ -46,8 +46,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	count1, visited := sim(grid, start)
-	fmt.Println("Part 1:", count1)
+	visited := sim(grid, start)
+	fmt.Println("Part 1:", len(visited)+1)
 
 	count2 := 0
 	h := len(grid)
@@ -70,22 +70,20 @@ func simLoop(grid [][]byte, pos Pos, obstruct Pos, seen *bitset.BitSet) bool {
 	for {
 		next := addPos(pos, delta)
 		if outBounds(next, w, h) {
-			break
+			return false
 		}
 		if next == obstruct || grid[next.y][next.x] == '#' {
 			delta = turn(delta)
-			id := getStateID(pos, w, delta)
-			if !seen.Insert(id) {
+			if !seen.Insert(getStateID(pos, w, delta)) {
 				return true
 			}
 			continue
 		}
 		pos = next
 	}
-	return false
 }
 
-func sim(grid [][]byte, pos Pos) (int, []Pos) {
+func sim(grid [][]byte, pos Pos) []Pos {
 	h := len(grid)
 	w := len(grid[0])
 
@@ -93,7 +91,6 @@ func sim(grid [][]byte, pos Pos) (int, []Pos) {
 	delta := Pos{x: 0, y: -1}
 	seen := bitset.New(w * h)
 	seen.Insert(getPosID(pos, w))
-	count := 1
 	for {
 		next := addPos(pos, delta)
 		if outBounds(next, w, h) {
@@ -104,15 +101,11 @@ func sim(grid [][]byte, pos Pos) (int, []Pos) {
 			continue
 		}
 		pos = next
-		id := getPosID(pos, w)
-		if !seen.Contains(id) {
-			count++
-		}
-		if seen.Insert(id) {
+		if seen.Insert(getPosID(pos, w)) {
 			p = append(p, pos)
 		}
 	}
-	return count, p
+	return p
 }
 
 type (
