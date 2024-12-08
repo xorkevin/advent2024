@@ -5,7 +5,7 @@ BENCH=hyperfine
 BIN=$(notdir $(CURDIR))
 
 GOBIN=./bin/$(BIN)
-RSBIN=./target/release/$(BIN)
+RSBIN=../target/release/$(BIN)
 
 GOSRC=$(shell find . -type f -name '*.go')
 RSSRC=$(shell find . -type f -name '*.rs')
