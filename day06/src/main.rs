@@ -50,10 +50,10 @@ fn sim_loop(grid: &Vec<Vec<u8>>, mut pos: Pos, obstruct: Pos, seen: &mut BitSet)
     let mut delta = Delta::N;
     seen.reset();
     loop {
-        let next = match pos.add(delta, bounds) {
-            Some(v) => v,
-            None => return false,
-        };
+        let next = pos.add(delta);
+        if out_bounds(next, bounds) {
+            return false;
+        }
         if next == obstruct || grid[next.y][next.x] == b'#' {
             delta = delta.turn();
             if !seen.insert(get_state_id(pos, bounds.x, delta)) {
@@ -76,10 +76,10 @@ fn sim(grid: &Vec<Vec<u8>>, mut pos: Pos) -> Vec<Pos> {
     let mut seen = BitSet::new(bounds.x * bounds.y);
     seen.insert(get_pos_id(pos, bounds.x));
     loop {
-        let next = match pos.add(delta, bounds) {
-            Some(v) => v,
-            None => break,
-        };
+        let next = pos.add(delta);
+        if out_bounds(next, bounds) {
+            break;
+        }
         if grid[next.y][next.x] == b'#' {
             delta = delta.turn();
             continue;
@@ -99,48 +99,24 @@ struct Pos {
 }
 
 impl Pos {
-    fn add(&self, delta: Delta, bounds: Pos) -> Option<Self> {
+    fn add(&self, delta: Delta) -> Self {
         match delta {
-            Delta::N => {
-                if self.y == 0 {
-                    None
-                } else {
-                    Some(Pos {
-                        x: self.x,
-                        y: self.y - 1,
-                    })
-                }
-            }
-            Delta::E => {
-                if self.x >= (bounds.x - 1) {
-                    None
-                } else {
-                    Some(Pos {
-                        x: self.x + 1,
-                        y: self.y,
-                    })
-                }
-            }
-            Delta::S => {
-                if self.y >= (bounds.y - 1) {
-                    None
-                } else {
-                    Some(Pos {
-                        x: self.x,
-                        y: self.y + 1,
-                    })
-                }
-            }
-            Delta::W => {
-                if self.x == 0 {
-                    None
-                } else {
-                    Some(Pos {
-                        x: self.x - 1,
-                        y: self.y,
-                    })
-                }
-            }
+            Delta::N => Pos {
+                x: self.x,
+                y: self.y.wrapping_sub(1),
+            },
+            Delta::E => Pos {
+                x: self.x + 1,
+                y: self.y,
+            },
+            Delta::S => Pos {
+                x: self.x,
+                y: self.y + 1,
+            },
+            Delta::W => Pos {
+                x: self.x.wrapping_sub(1),
+                y: self.y,
+            },
         }
     }
 }
@@ -179,4 +155,8 @@ fn get_pos_id(pos: Pos, w: usize) -> usize {
 
 fn get_state_id(pos: Pos, w: usize, delta: Delta) -> usize {
     get_pos_id(pos, w) * 4 + delta.value()
+}
+
+fn out_bounds(pos: Pos, bounds: Pos) -> bool {
+    pos.x >= bounds.x || pos.y >= bounds.y
 }
