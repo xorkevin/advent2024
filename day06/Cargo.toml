@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-advent2024 = { path = "../" }
+advent2024 = { path = ".." }
