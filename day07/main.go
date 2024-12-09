@@ -50,7 +50,6 @@ func main() {
 		}
 		if search(target, nums[0], nums[1:], false) {
 			count1 += target
-			count2 += target
 		} else if search(target, nums[0], nums[1:], true) {
 			count2 += target
 		}
@@ -61,7 +60,7 @@ func main() {
 	}
 
 	fmt.Println("Part 1:", count1)
-	fmt.Println("Part 2:", count2)
+	fmt.Println("Part 2:", count1+count2)
 }
 
 func search(target, start int, rest []int, pt2 bool) bool {
