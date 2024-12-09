@@ -10,18 +10,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = BufReader::new(file);
 
     let mut grid = Vec::new();
-    let mut start = None;
+    let mut need_start = true;
+    let mut start = Pos { x: 0, y: 0 };
     for (r, line) in reader.lines().enumerate() {
         let line = line?;
         let row = line.into_bytes();
-        if start.is_none() {
+        if need_start {
             if let Some(c) = row.iter().position(|&v| v == b'^') {
-                start = Some(Pos { x: c, y: r });
+                need_start = false;
+                start = Pos { x: c, y: r };
             }
         }
         grid.push(row);
     }
-    let start = start.ok_or("No start")?;
+    let start = start;
     let grid = grid;
 
     let visited = sim(&grid, start);
@@ -36,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             count2 += 1;
         }
     }
-    println!("Part 2: {}", count2 + 1);
+    println!("Part 2: {}", count2);
 
     Ok(())
 }

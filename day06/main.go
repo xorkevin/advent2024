@@ -36,6 +36,7 @@ func main() {
 		row := []byte(scanner.Text())
 		if needStart {
 			if col := bytes.IndexByte(row, '^'); col >= 0 {
+				needStart = false
 				start = Pos{x: col, y: len(grid)}
 			}
 		}
