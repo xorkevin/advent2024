@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/xorkevin/advent2024/bitset"
 )
 
 const (
@@ -29,7 +31,8 @@ func main() {
 
 	count1 := 0
 	count2 := 0
-	orders := make([][]int, 100)
+	orders := [100][100]byte{}
+	seen := bitset.New(100)
 
 	firstHalf := true
 	scanner := bufio.NewScanner(file)
@@ -49,51 +52,53 @@ func main() {
 				log.Fatalln(err)
 			}
 			// num1 must be ordered before num2
-			orders[num1] = append(orders[num1], num2)
+			current := orders[num1][0] + 1
+			orders[num1][current] = byte(num2)
+			orders[num1][0] = current
 			continue
 		}
 		f := strings.Split(scanner.Text(), ",")
-		nums := make([]int, 0, len(f))
+		nums := make([]byte, 0, len(f))
 		for _, i := range f {
 			num, err := strconv.Atoi(i)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			nums = append(nums, num)
+			nums = append(nums, byte(num))
 		}
 
 		inOrder := true
-		seen := make([]bool, 100)
+		seen.Reset()
 	outer:
 		for _, i := range nums {
-			for _, o := range orders[i] {
-				if seen[o] {
+			for _, o := range orders[i][1 : orders[i][0]+1] {
+				if seen.Contains(int(o)) {
 					inOrder = false
 					break outer
 				}
 			}
-			seen[i] = true
+			seen.Insert(int(i))
 		}
 		if inOrder {
-			count1 += nums[len(nums)/2]
+			count1 += int(nums[len(nums)/2])
 		} else {
-			slices.SortFunc(nums, func(a, b int) int {
+			slices.SortFunc(nums, func(a, b byte) int {
 				if a == b {
 					return 0
 				}
-				for _, i := range orders[a] {
+				for _, i := range orders[a][1 : orders[a][0]+1] {
 					if i == b {
 						return -1
 					}
 				}
-				for _, i := range orders[b] {
+				for _, i := range orders[b][1 : orders[b][0]+1] {
 					if i == a {
 						return 1
 					}
 				}
 				return 0
 			})
-			count2 += nums[len(nums)/2]
+			count2 += int(nums[len(nums)/2])
 		}
 	}
 
