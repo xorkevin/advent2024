@@ -1,4 +1,4 @@
-.PHONY: run phase1 build bench go run-go build-go rs run-rs build-rs
+.PHONY: run build bench go run-go build-go rs run-rs build-rs
 
 BENCHARGS=--warmup=8 --shell=none --time-unit=millisecond
 BENCH=hyperfine
@@ -7,14 +7,8 @@ BIN=$(notdir $(CURDIR))
 GOBIN=./bin/$(BIN)
 RSBIN=../target/release/$(BIN)
 
-GOSRC=$(shell find . -type f -name '*.go')
-RSSRC=$(shell find . -type f -name '*.rs')
-
 run:
 	go run .
-
-phase1:
-	cat phase1.txt | PHASE=1 go run .
 
 build: build-go build-rs
 
@@ -26,9 +20,7 @@ go: build-go run-go
 run-go:
 	$(GOBIN)
 
-build-go: $(GOBIN)
-
-$(GOBIN): $(GOSRC)
+build-go:
 	go build -o $(GOBIN)
 
 rs: build-rs run-rs
@@ -36,7 +28,5 @@ rs: build-rs run-rs
 run-rs:
 	$(RSBIN)
 
-build-rs: $(RSBIN)
-
-$(RSBIN): $(RSSRC)
+build-rs:
 	cargo build --release

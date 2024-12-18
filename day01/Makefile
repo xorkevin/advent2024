@@ -7,9 +7,6 @@ BIN=$(notdir $(CURDIR))
 GOBIN=./bin/$(BIN)
 RSBIN=../target/release/$(BIN)
 
-GOSRC=$(shell find . -type f -name '*.go')
-RSSRC=$(shell find . -type f -name '*.rs')
-
 run:
 	go run .
 
@@ -23,9 +20,7 @@ go: build-go run-go
 run-go:
 	$(GOBIN)
 
-build-go: $(GOBIN)
-
-$(GOBIN): $(GOSRC)
+build-go:
 	go build -o $(GOBIN)
 
 rs: build-rs run-rs
@@ -33,7 +28,5 @@ rs: build-rs run-rs
 run-rs:
 	$(RSBIN)
 
-build-rs: $(RSBIN)
-
-$(RSBIN): $(RSSRC)
+build-rs:
 	cargo build --release
