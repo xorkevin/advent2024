@@ -84,7 +84,13 @@ func (s *HashSet[T]) Reset() {
 	clear(s.m)
 }
 
-func Search[T any, I, J constraints.Unsigned](start Edge[T, I], priorityMap IndexMap[T, J], closedSet Set[T], graph Graph[T, I]) (I, bool) {
+type (
+	EdgeMap[T any] interface {
+		Set(to, from T)
+	}
+)
+
+func Search[T any, I, J constraints.Unsigned](start Edge[T, I], priorityMap IndexMap[T, J], closedSet Set[T], graph Graph[T, I], edgeMap EdgeMap[T]) (I, bool) {
 	openSet := newOpenSet[T, I](priorityMap)
 	openSet.Push(start.V, start.C, start.C+start.H)
 	for !openSet.Empty() {
@@ -102,10 +108,16 @@ func Search[T any, I, J constraints.Unsigned](start Edge[T, I], priorityMap Inde
 			if vg, ok := openSet.Get(o.V); ok {
 				if g < vg {
 					openSet.Update(o.V, g, f)
+					if edgeMap != nil {
+						edgeMap.Set(o.V, cur)
+					}
 				}
 				continue
 			}
 			openSet.Push(o.V, g, f)
+			if edgeMap != nil {
+				edgeMap.Set(o.V, cur)
+			}
 		}
 	}
 	var z I
@@ -120,7 +132,7 @@ type (
 
 func newOpenSet[T any, I, J constraints.Unsigned](m IndexMap[T, J]) *openSet[T, I, J] {
 	return &openSet[T, I, J]{
-		q: newPriorityQueue[T, I, J](m),
+		q: newPriorityQueue[T, I](m),
 	}
 }
 
