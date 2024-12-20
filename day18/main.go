@@ -102,7 +102,7 @@ func NewGridEdges() *GridEdges {
 	return &GridEdges{}
 }
 
-func (g *GridEdges) Set(to, from Vec2) {
+func (g *GridEdges) Set(to, from Vec2, vg uint16) {
 	g.e[to.y*dim+to.x] = uint16(from.y*dim + from.x)
 }
 
@@ -181,7 +181,7 @@ func NewGrid(end Vec2) *Grid {
 	}
 }
 
-func (g *Grid) Edges(v Vec2) []graph.Edge[Vec2, uint16] {
+func (g *Grid) Edges(v Vec2, vg uint16) []graph.Edge[Vec2, uint16] {
 	var arr [4]graph.Edge[Vec2, uint16]
 	n := arr[:0]
 	for _, i := range neighborDeltas {
@@ -201,7 +201,7 @@ func (g *Grid) Edges(v Vec2) []graph.Edge[Vec2, uint16] {
 	return n
 }
 
-func (g *Grid) IsEnd(v Vec2) bool {
+func (g *Grid) IsEnd(v Vec2, vg uint16) bool {
 	return v == g.end
 }
 
