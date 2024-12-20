@@ -14,8 +14,8 @@ type (
 	}
 
 	Graph[T any, I constraints.Unsigned] interface {
-		Edges(v T) []Edge[T, I]
-		IsEnd(v T) bool
+		Edges(v T, g I) []Edge[T, I]
+		IsEnd(v T, g I) bool
 	}
 )
 
@@ -85,21 +85,21 @@ func (s *HashSet[T]) Reset() {
 }
 
 type (
-	EdgeMap[T any] interface {
-		Set(to, from T)
+	EdgeMap[T any, I constraints.Unsigned] interface {
+		Set(to, from T, g I)
 	}
 )
 
-func Search[T any, I, J constraints.Unsigned](start Edge[T, I], priorityMap IndexMap[T, J], closedSet Set[T], graph Graph[T, I], edgeMap EdgeMap[T]) (I, bool) {
+func Search[T any, I, J constraints.Unsigned](start Edge[T, I], priorityMap IndexMap[T, J], closedSet Set[T], graph Graph[T, I], edgeMap EdgeMap[T, I]) (I, bool) {
 	openSet := newOpenSet[T, I](priorityMap)
 	openSet.Push(start.V, start.C, start.C+start.H)
 	for !openSet.Empty() {
 		cur, curg, _ := openSet.Pop()
 		closedSet.Set(cur)
-		if graph.IsEnd(cur) {
+		if graph.IsEnd(cur, curg) {
 			return curg, true
 		}
-		for _, o := range graph.Edges(cur) {
+		for _, o := range graph.Edges(cur, curg) {
 			if closedSet.Has(o.V) {
 				continue
 			}
@@ -109,14 +109,14 @@ func Search[T any, I, J constraints.Unsigned](start Edge[T, I], priorityMap Inde
 				if g < vg {
 					openSet.Update(o.V, g, f)
 					if edgeMap != nil {
-						edgeMap.Set(o.V, cur)
+						edgeMap.Set(o.V, cur, g)
 					}
 				}
 				continue
 			}
 			openSet.Push(o.V, g, f)
 			if edgeMap != nil {
-				edgeMap.Set(o.V, cur)
+				edgeMap.Set(o.V, cur, g)
 			}
 		}
 	}
